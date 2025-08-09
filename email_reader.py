@@ -85,7 +85,7 @@ def processar_emails():
             payload = {
                 "pergunta": corpo,
                 "cliente": cliente_nome,
-                "contacto": remetente_email,
+                "email": remetente_email,
                 "data_pedido": data_pedido_iso
             }
 
@@ -113,3 +113,4 @@ if __name__ == "__main__":
     while True:
         processar_emails()
         time.sleep(INTERVALO_VERIFICACAO)
+
