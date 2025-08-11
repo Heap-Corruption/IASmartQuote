@@ -94,7 +94,12 @@ def processar_emails():
             try:
                 r = requests.post(API_FLASK, json=payload)
                 if r.status_code == 200:
-                    print("\n\n✅ Resposta da IA:", r.json())
+                    dados_ia = r.json()
+                    if isinstance(dados_ia, list):
+                        for item in dados_ia:
+                            item["email"] = remetente_email
+                            item["data_pedido"] = data_pedido_iso
+                    print("\n\n✅ Resposta da IA:", dados_ia)
                 else:
                     print("Erro da IA:", r.text)
             except Exception as e:
