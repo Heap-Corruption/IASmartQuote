@@ -15,9 +15,19 @@ SERVIDOR_IMAP = "imap.gmail.com"
 
 # Configuração do servidor IA
 API_FLASK = "http://127.0.0.1:5000/ia"
-
+API_SECUNDARIA = "http://127.0.0.1:8000/v1/api/quotes"
+headers = {
+    "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImU2Yzk0YTJkLTEzZDUtNDZmNS04YTM0LWU3YThmM2EwNzMxMiIsImlhdCI6MTc1NTE4ODA1OSwiZXhwIjoxNzU1MTkxNjU5fQ.4yBq8BccznY67eGAolxsBbypdoWz8LMtwlTvvXtSfqM",
+    "Content-Type": "application/json"
+}
 # Intervalo entre verificações (em segundos)
-INTERVALO_VERIFICACAO = 5
+INTERVALO_VERIFICACAO = 1
+
+def getName(rem):
+    name = rem.split()
+    if name:
+        name.pop()
+    return " ".join(name)
 
 def processar_emails():
     try:
@@ -90,18 +100,22 @@ def processar_emails():
             }
 
             print("Enviando para IA:", payload)
-
             try:
                 r = requests.post(API_FLASK, json=payload)
                 if r.status_code == 200:
                     dados_ia = r.json()
                     if isinstance(dados_ia, list):
                         for item in dados_ia:
-                            item["email"] = remetente_email
-                            item["data_pedido"] = data_pedido_iso
+                            item["clientName"] = getName(remetente)
+                            item["clientEmail"] = remetente_email
+                            item["sentAt"] = data_pedido_iso
                     print("\n\n✅ Resposta da IA:", dados_ia)
+                    for item in dados_ia:
+                        r2 = requests.post(API_SECUNDARIA, json=item, headers=headers)
+                        print(r2.json())
                 else:
                     print("Erro da IA:", r.text)
+
             except Exception as e:
                 print("Falha ao enviar para IA:", str(e))
 
