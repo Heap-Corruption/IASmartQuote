@@ -11,14 +11,14 @@ INSTRUCAO_DE_SISTEMA = """
 Você é um assistente de compras. Sua tarefa é ler um texto de cotação e extrair os dados solicitados.
 Para cada produto mencionado, você deve criar um objeto JSON com os seguintes campos:
 
-- cliente: Nome do cliente
-- email: E-mail do cliente
-- telefone: Número de telefone
-- produto: Nome do produto
-- quantidade: Quantidade
-- local: Local completo de entrega
-- data_entrega: Data de entrega no formato YYYY-MM-DD (se houver)
-- data_pedido: Data e hora que o e-mail foi enviado no formato ISO 8601
+- clientName: Nome do cliente
+- clientEmail: E-mail do cliente
+- clientPhone: Número de telefone
+- product: Nome do produto
+- quantity: Quantidade
+- destination: Local completo de entrega
+- dueDate: Data de entrega no formato YYYY-MM-DD (se houver)
+- sentAt: Data e hora que o e-mail foi enviado no formato ISO 8601
 
 Regras:
 1. Sempre responda como **lista JSON** (`[ {...}, {...} ]`), mesmo que haja apenas um item.
