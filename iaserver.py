@@ -19,6 +19,7 @@ Para cada produto mencionado, você deve criar um objeto JSON com os seguintes c
 - destination: Local completo de entrega
 - dueDate: Data de entrega no formato YYYY-MM-DD (se houver)
 - sentAt: Data e hora que o e-mail foi enviado no formato ISO 8601
+- taxa: Taxa aplicada ao item (se houver)
 
 Regras:
 1. Sempre responda como **lista JSON** (`[ {...}, {...} ]`), mesmo que haja apenas um item.
@@ -52,13 +53,17 @@ def string_para_json_seguro(texto):
 def responder():
     data = request.get_json()
     pergunta = data.get('pergunta', '')
+    instrucao_extra = data.get('instrucao', '')
 
     if not pergunta:
         return jsonify({'erro': 'Pergunta não fornecida'}), 400
 
+    # Usa a instrução recebida, senão a padrão
+    instrucao = instrucao_extra if instrucao_extra else INSTRUCAO_DE_SISTEMA
+
     try:
         resposta = model.generate_content(
-            f"{INSTRUCAO_DE_SISTEMA}\n\nTexto da cotação:\n{pergunta}"
+            f"{instrucao}\n\nTexto da cotação:\n{pergunta}"
         )
         texto = resposta.text.strip()
         dados = string_para_json_seguro(texto)
