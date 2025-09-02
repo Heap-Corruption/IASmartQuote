@@ -5,6 +5,7 @@ import requests
 from datetime import datetime
 from dotenv import load_dotenv
 from find import scrape_products
+from sendMailer import sendEmail
 
 
 # Configuração do servidor IA
@@ -127,8 +128,7 @@ def make_quote(payload, remetente, remetente_email, data_pedido_iso, assunto_raw
                             print(f"\n\nProduto encontrado: {bdProduct}\n\n")
                             quoteItem = {"quoteId": quoteId, "productId": bdProduct["id"], "quantity": item["quantity"], "description": bdProduct["description"], \
                                 "unitPrice": bdProduct["unitPrice"], "notes": "",\
-                                "totalPrice": (float)(bdProduct["unitPrice"]) * (float)(item["quantity"]), "tax": bdProduct.get("tax", 0)}
-                            print(f"\n\nItem to create: {quoteItem}\n\n")
+                                "totalPrice": (float)(bdProduct["unitPrice"]) * (float)(item["quantity"]) + bdProduct.get("tax", 0), "tax": bdProduct.get("tax", 0)}
                             quoteItem = requests.post(API_ROUTES["getquoteItems"], json=quoteItem, headers=header)
                             if (quoteItem.ok is False):
                                 raise Exception("SetItems error :" + quoteItem.text)
@@ -138,7 +138,7 @@ def make_quote(payload, remetente, remetente_email, data_pedido_iso, assunto_raw
                             notItem = find_product(notfoundList, item["product"], "product")
                             if (notItem is None):
                                 print("\n\nIndo para web")
-                                scrapResult = scrape_products(item)
+                                scrapResult = scrape_products(item)[:3]
                                 for iter in scrapResult:
                                     data = {
                                         "quoteId": quoteId,
@@ -153,7 +153,8 @@ def make_quote(payload, remetente, remetente_email, data_pedido_iso, assunto_raw
                                     if (data.ok is False):
                                         raise Exception("SetTips error :" + data.text)
                                 print(f"\n\n✅Scrape result: {scrapResult}\n\n")
-                                print("Falta alertar o adm sobre possiveis sugestões de produtos.")
+                                sendEmail("angeloquissanga55@gmail.com", "SmartQuote: Sugestões de produtos não encontrados", os.getenv("MAILBODY"), is_html=True)
+                                # print("Falta alertar o adm sobre possiveis sugestões de produtos.")
                 else:
                     raise Exception("Erro da IA: " + response.text)
 
