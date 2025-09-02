@@ -75,14 +75,14 @@ schema = {
 def scrape_products(product_json: dict):
     load_dotenv()
     """
-    Recebe um JSON com { "product": "...", "price": "...", "website": "...", "limit": N }
+    Recebe um JSON com { "product": "...", "price": "..."(opcional), "description": "..."(opcional) }
     Faz scraping e retorna lista de produtos encontrados.
     """
     app = FirecrawlApp(api_key=os.getenv("FIRECRAWL_API_KEY"))
 
-    search_term = product_json.get("product")
-    website = product_json.get("website", "https://itec.co.ao/*")
-    product_limit = product_json.get("limit", 5)
+    search_term = product_json.get("product", "")
+    website = (json.loads(os.getenv("WEBSITE", "[]")) or [None])[0]+"/*"
+    product_limit = 20
 
     try:
         scrape_result = extract_with_handling(
@@ -91,20 +91,14 @@ def scrape_products(product_json: dict):
             prompt=f"Extract up to {product_limit} products that match '{search_term}' from this website.",
             schema=schema
         )
-
         products = scrape_result.data.get("products", [])[:product_limit]
-
-        print(f"✅ Produtos extraídos:\n\n{products}\n\n")
-
         # Montar corpo para a API Flask
         BODY = f""" Ache esse produto: {json.dumps(product_json, ensure_ascii=False)} nessa lista de produtos: {json.dumps(products, ensure_ascii=False)}"""
         payload = {
             "pergunta": BODY,
             "instruction": INSTRUCAO_DE_SISTEMA
         }
-
         response = requests.post(os.getenv("API_FLASK"), json=payload)
-        print(f"Resposta da IA:\n\n{response.json()}\n\n")
 
         # Salvar no arquivo
         with open("Result.json", "w", encoding="utf-8") as f:
@@ -113,18 +107,15 @@ def scrape_products(product_json: dict):
         return products
 
     except FirecrawlError as fe:
-        print(f"❌ Erro Firecrawl ({fe.code}): {fe}")
-        return []
+        raise Exception(f"Erro Firecrawl ({fe.code}): {fe}")
 
-# ==========================
-# Exemplo de uso
-# ==========================
-if __name__ == "__main__":
-    produto = {
-        "product": "HP PROBOOK",
-        "price": "KZ 999900.99",
-        "website": "https://itec.co.ao/*",
-        "limit": 5
-    }
+# # ==========================
+# # Exemplo de uso
+# # ==========================
+# if __name__ == "__main__":
+#     produto = {
+#         "product": "HP PROBOOK",
+#         "price": "KZ 999900.99",
+#     }
 
-    scrape_products(produto)
+#     scrape_products(produto)
