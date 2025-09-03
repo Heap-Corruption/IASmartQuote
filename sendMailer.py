@@ -36,8 +36,8 @@ def sendEmail(to_email, subject, message, is_html=False):
         print(f"❌ Erro ao enviar email: {e}")
     return 0
 
-if __name__ == "__main__":
-    mailbody = os.getenv("MAILBODY")
-    if mailbody is None:
-        mailbody = "Corpo do email não definido."
-    sendEmail("angeloquissanga55@gmail.com", "SmartQuote: Sugestões de produtos não encontrados", mailbody, is_html=True)
+# if __name__ == "__main__":
+#     mailbody = os.getenv("MAILBODY")
+#     if mailbody is None:
+#         mailbody = "Corpo do email não definido."
+#     sendEmail("angeloquissanga55@gmail.com", "SmartQuote: Sugestões de produtos não encontrados", mailbody, is_html=True)

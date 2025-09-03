@@ -24,6 +24,7 @@ def alertAdmins(header, routeGetUsers):
     users = getAdm(users.json()["data"])
     for user in users:
         sendEmail(user["email"], "SmartQuote: Sugestões de produtos não encontrados", os.getenv("MAILBODY"), is_html=True)
+    print("Alerta enviado para os administradores.")
     return 0
 
 
@@ -38,6 +39,17 @@ API_ROUTES = {
     "getquoteItems": "https://smart-quote-back.onrender.com/v1/api/quote-items",
     "getquoteItemsNotFound": "https://smart-quote-back.onrender.com/v1/api/quote-items-not-found"
 }
+
+# API_ROUTES = {
+#     "getProducts": "http://10.13.200.143:8080/v1/api/products?name=",
+#     "login": "http://10.13.200.143:8080/v1/api/users/login",
+#     "getProducts": "http://10.13.200.143:8080/v1/api/products",
+#     "getQuote": "http://10.13.200.143:8080/v1/api/quotes",
+#     "getTips": "http://10.13.200.143:8080/v1/api/tips",
+#     "getUsers": "http://10.13.200.143:8080/v1/api/users",
+#     "getquoteItems": "http://10.13.200.143:8080/v1/api/quote-items",
+#     "getquoteItemsNotFound": "http://10.13.200.143:8080/v1/api/quote-items-not-found"
+# }
 
 
 
@@ -69,12 +81,42 @@ def find_product(products, name_to_check, field):
     return None
 
 
-def parse_price(price_str):
+def parse_price(price_str: str) -> float:
+    if not price_str:
+        return 0.0
+    
+    # Remove tudo que não for número, vírgula ou ponto
     clean = re.sub(r"[^\d.,]", "", price_str)
-    clean = clean.replace(",", ".")
+
+    # Caso não reste nada
     if not clean:
         return 0.0
-    return float(clean)
+
+    # Se tiver mais de um ponto, trata como separador de milhar
+    if clean.count(".") > 1:
+        parts = clean.split(".")
+        clean = "".join(parts[:-1]) + "." + parts[-1]
+
+    # Se tiver mais de uma vírgula, trata como separador de milhar
+    if clean.count(",") > 1:
+        parts = clean.split(",")
+        clean = "".join(parts[:-1]) + "," + parts[-1]
+
+    # Converte vírgula decimal para ponto
+    if "," in clean and "." in clean:
+        # Ex.: "1.234,56" -> "1234.56"
+        if clean.rfind(",") > clean.rfind("."):
+            clean = clean.replace(".", "")
+            clean = clean.replace(",", ".")
+        else:
+            clean = clean.replace(",", "")
+    else:
+        clean = clean.replace(",", ".")
+
+    try:
+        return float(clean)
+    except ValueError:
+        return 0.0
 
 
 def quote_products(ia_response, headers, idquote):
@@ -136,7 +178,6 @@ def make_quote(payload, remetente, remetente_email, data_pedido_iso, assunto_raw
                         "subject": assunto_raw,
                         "body": body,
                         "requirements": {"data": [{"product": item["product"], "quantity": item["quantity"]} for item in ia_response]},
-                        # "metadata": {"source": "email", "priority": "high"},
                         "sentAt": ia_response[0].get("sentAt", "")
                     }
                     if (token["status"] != "success"):
@@ -164,7 +205,6 @@ def make_quote(payload, remetente, remetente_email, data_pedido_iso, assunto_raw
                             if (notItem is None):
                                 # print("\n\nIndo para web")
                                 scrapResult = scrape_products(item)[:3]
-                                scrapResult = []
                                 if (len(scrapResult) == 0):
                                     data = {
                                     "quoteId": quoteId,
