@@ -40,18 +40,6 @@ API_ROUTES = {
     "getquoteItemsNotFound": "https://smart-quote-back.onrender.com/v1/api/quote-items-not-found"
 }
 
-# API_ROUTES = {
-#     "getProducts": "http://10.13.200.143:8080/v1/api/products?name=",
-#     "login": "http://10.13.200.143:8080/v1/api/users/login",
-#     "getProducts": "http://10.13.200.143:8080/v1/api/products",
-#     "getQuote": "http://10.13.200.143:8080/v1/api/quotes",
-#     "getTips": "http://10.13.200.143:8080/v1/api/tips",
-#     "getUsers": "http://10.13.200.143:8080/v1/api/users",
-#     "getquoteItems": "http://10.13.200.143:8080/v1/api/quote-items",
-#     "getquoteItemsNotFound": "http://10.13.200.143:8080/v1/api/quote-items-not-found"
-# }
-
-
 
 def postTo(data, url, headers):
     response = requests.post(url, json=data, headers=headers)
@@ -84,7 +72,7 @@ def find_product(products, name_to_check, field):
 def parse_price(price_str: str) -> float:
     if not price_str:
         return 0.0
-    
+
     # Remove tudo que não for número, vírgula ou ponto
     clean = re.sub(r"[^\d.,]", "", price_str)
 

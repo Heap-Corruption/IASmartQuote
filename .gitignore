@@ -1,2 +1,5 @@
 ./test.py
 ./virtual/*
+.env
+Makefile
+__pycache__/
