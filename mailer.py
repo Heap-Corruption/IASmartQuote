@@ -9,7 +9,7 @@ import pdfplumber
 from datetime import datetime
 from dotenv import load_dotenv
 from email.header import decode_header
-from makeQuote import make_quote 
+from makeQuote import make_quote
 
 # Configurações de e-mail
 load_dotenv()
@@ -65,7 +65,7 @@ def processar_emails():
                             with pdfplumber.open(temp_pdf_path) as pdf:
                                 texto_pdf = "\n".join([page.extract_text() for page in pdf.pages if page.extract_text()])
                                 body += "\n" + texto_pdf
-                            os.unlink(temp_pdf_path)
+                            os.unlink(temp_pdf_print(f"Monitor de e-mails iniciado! Checando a cada {INTERVALO_VERIFICACAO} segundos...")path)
             else:
                 charset = mensagem.get_content_charset() or "utf-8"
                 body = mensagem.get_payload(decode=True).decode(charset, errors="ignore")
@@ -102,3 +102,5 @@ if __name__ == "__main__":
     while True:
         processar_emails()
         time.sleep(INTERVALO_VERIFICACAO)
+else:
+    print(f"Monitor de e-mails iniciado! Checando a cada {INTERVALO_VERIFICACAO} segundos...")

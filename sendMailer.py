@@ -8,8 +8,6 @@ import os
 
 load_dotenv()
 
-# ...existing code...
-
 def sendEmail(to_email, subject, message, is_html=False):
     load_dotenv()
     from_email = os.getenv("MAILUSER")
