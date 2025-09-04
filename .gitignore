@@ -1,5 +1,6 @@
 ./test.py
-./virtual/*
 .env
 Makefile
 __pycache__/
+virtual
+Result.json

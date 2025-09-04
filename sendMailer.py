@@ -5,8 +5,7 @@ from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
 import os
 
-
-load_dotenv()
+# ...existing code...
 
 def sendEmail(to_email, subject, message, is_html=False):
     load_dotenv()
@@ -29,9 +28,9 @@ def sendEmail(to_email, subject, message, is_html=False):
         server.sendmail(from_email, to_email, msg.as_string())
         server.quit()
 
-        print("✅ Email enviado com sucesso!")
+        print("✅ Email sent successfully!")
     except Exception as e:
-        print(f"❌ Erro ao enviar email: {e}")
+        print(f"❌ Error sending email: {e}")
     return 0
 
 # if __name__ == "__main__":

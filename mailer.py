@@ -3,12 +3,12 @@ import time
 import json
 import email
 import imaplib
-import requests
 import tempfile
 import pdfplumber
 from datetime import datetime
 from dotenv import load_dotenv
 from email.header import decode_header
+from alerts import alertSupport
 from makeQuote import make_quote
 
 # Configurações de e-mail
@@ -19,8 +19,9 @@ INTERVALO_VERIFICACAO = 1
 
 
 # Cota todos os produtos
-def processar_emails():
+def emailProcessing():
     try:
+        res = 0
         mail = imaplib.IMAP4_SSL(os.getenv("SERVIDOR_IMAP"))
         mail.login(os.getenv("MAILUSER"), os.getenv("MAILPASSWORD"))
         mail.select("inbox")
@@ -31,17 +32,16 @@ def processar_emails():
             mensagem = email.message_from_bytes(dados[0][1])
 
             # Decodificar assunto
-            assunto_raw = mensagem["Subject"]
-            assunto_decodificado, encoding = decode_header(assunto_raw)[0]
-            if isinstance(assunto_decodificado, bytes):
-                assunto = assunto_decodificado.decode(encoding or "utf-8")
+            subject_raw = mensagem["Subject"]
+            encoding = decode_header(subject_raw)[0]
+
+            remetente_raw = mensagem.get("From")
+            remetente_decodificado, encoding = decode_header(remetente_raw)[0]
+            if isinstance(remetente_decodificado, bytes):
+                remetente = remetente_decodificado.decode(encoding or "utf-8")
             else:
-                assunto = assunto_decodificado
-
-            remetente = mensagem.get("From")
+                remetente = remetente_decodificado
             data_email = mensagem["Date"]
-
-            print(f"Novo e-mail de: {remetente} | Assunto: {assunto}")
 
             body = ""
             if mensagem.is_multipart():
@@ -58,7 +58,7 @@ def processar_emails():
                     if "application/pdf" in content_type:
                         nome_arquivo = parte.get_filename()
                         if nome_arquivo:
-                            print(f"📎 Anexo encontrado: {nome_arquivo}")
+                            # print(f"📎 Anexo encontrado: {nome_arquivo}")
                             with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_pdf:
                                 temp_pdf.write(parte.get_payload(decode=True))
                                 temp_pdf_path = temp_pdf.name
@@ -70,35 +70,37 @@ def processar_emails():
                 charset = mensagem.get_content_charset() or "utf-8"
                 body = mensagem.get_payload(decode=True).decode(charset, errors="ignore")
 
-            print("Texto extraído:")
-            print(body)
-
+            print(f"\n✅ Email body: {body}")
             # Metadados
             try:
-                data_pedido_iso = datetime.strptime(data_email, "%a, %d %b %Y %H:%M:%S %z").isoformat()
+                sentAt = datetime.strptime(data_email, "%a, %d %b %Y %H:%M:%S %z").isoformat()
             except:
-                data_pedido_iso = datetime.utcnow().isoformat()
+                sentAt = datetime.utcnow().isoformat()
 
-            remetente_email = remetente.split("<")[-1].replace(">", "").strip()
-            cliente_nome = remetente.split("<")[0].strip().replace('"', '')
+            clientEmail = remetente.split("<")[-1].replace(">", "").strip()
+            clientName = remetente.split("<")[0].strip().replace('"', '')
 
             payload = {
                 "pergunta": body,
-                "cliente": cliente_nome,
-                "email": remetente_email,
-                "data_pedido": data_pedido_iso
+                "cliente": clientName,
+                "email": clientEmail,
+                "data_pedido": sentAt
             }
-
-            res = make_quote(payload, remetente, remetente_email, data_pedido_iso, assunto_raw, body)
-            # Marcar como lido
-            mail.store(num, '+FLAGS', '\\Seen')
+            res = make_quote(payload, remetente, clientEmail, sentAt, subject_raw, body)
+            if (res == 0):
+                mail.store(num, '+FLAGS', '\\Seen')
+            else:
+                mail.store(num, '-FLAGS', '\\Seen')
         mail.logout()
-
+        return res
     except Exception as e:
-        print("Erro ao processar e-mails:", str(e))
+        print("\n🛑 Error processing emails:", str(e))
+        alertSupport("SmartQuote: problemas técnicos", str(e))
+
 def run_service():
     while True:
-        processar_emails()
+        if (emailProcessing() != 0):
+            break
         time.sleep(INTERVALO_VERIFICACAO)
 if __name__ == "__main__":
     print(f"Main:Monitor de e-mails iniciado! Checando a cada {INTERVALO_VERIFICACAO} segundos...")

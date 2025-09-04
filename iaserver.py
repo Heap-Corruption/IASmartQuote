@@ -1,11 +1,8 @@
 from flask import Flask, request, jsonify
 import google.generativeai as genai
-import os, re, json
-from multiprocessing import Process
-from mailer import run_service
-
-emailProcess = Process(target=run_service)
-emailProcess.start()
+import os
+import re
+import json
 
 API_KEY = "AIzaSyDMzV4fOLS3_IcCPUjlkokMm8xbO6awGbg"
 PORTA = 5000

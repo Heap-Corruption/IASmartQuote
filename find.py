@@ -4,6 +4,8 @@ from firecrawl import FirecrawlApp
 from dotenv import load_dotenv
 import requests
 
+from alerts import alertSupport
+
 INSTRUCAO_DE_SISTEMA = """Voce agora pode me ajudar a encontrar no maximo 4 opcoes de produtos tendo em conta o melhor custo beneficio entre uma lista de produtos.
 ## Regras:
 1. Considere o preco e a qualidade dos produtos.
@@ -103,10 +105,10 @@ def scrape_products(product_json: dict):
         # Salvar no arquivo
         with open("Result.json", "w", encoding="utf-8") as f:
             json.dump({"products": products}, f, indent=2, ensure_ascii=False)
-
         return products
 
     except FirecrawlError as fe:
+        alertSupport(f"SmartQuote: Erro Firecrawl", f"Code error [ ({fe.code}) ] {str(fe)}<br> Tips: Verifique a sua chave de API, créditos disponíveis e a URL do site.")
         raise Exception(f"Erro Firecrawl ({fe.code}): {fe}")
 
 # # ==========================
