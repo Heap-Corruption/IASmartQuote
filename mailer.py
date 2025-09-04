@@ -65,7 +65,7 @@ def processar_emails():
                             with pdfplumber.open(temp_pdf_path) as pdf:
                                 texto_pdf = "\n".join([page.extract_text() for page in pdf.pages if page.extract_text()])
                                 body += "\n" + texto_pdf
-                            os.unlink(temp_pdf_print(f"Monitor de e-mails iniciado! Checando a cada {INTERVALO_VERIFICACAO} segundos...")path)
+                            os.unlink(temp_pdf_path)
             else:
                 charset = mensagem.get_content_charset() or "utf-8"
                 body = mensagem.get_payload(decode=True).decode(charset, errors="ignore")
@@ -96,11 +96,12 @@ def processar_emails():
 
     except Exception as e:
         print("Erro ao processar e-mails:", str(e))
-
-if __name__ == "__main__":
-    print(f"Monitor de e-mails iniciado! Checando a cada {INTERVALO_VERIFICACAO} segundos...")
+def run_service():
     while True:
         processar_emails()
         time.sleep(INTERVALO_VERIFICACAO)
+if __name__ == "__main__":
+    print(f"Main:Monitor de e-mails iniciado! Checando a cada {INTERVALO_VERIFICACAO} segundos...")
+    run_service()
 else:
-    print(f"Monitor de e-mails iniciado! Checando a cada {INTERVALO_VERIFICACAO} segundos...")
+    print(f"Service:Monitor de e-mails iniciado! Checando a cada {INTERVALO_VERIFICACAO} segundos...")
