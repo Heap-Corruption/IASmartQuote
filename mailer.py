@@ -65,7 +65,7 @@ def processar_emails():
                             with pdfplumber.open(temp_pdf_path) as pdf:
                                 texto_pdf = "\n".join([page.extract_text() for page in pdf.pages if page.extract_text()])
                                 body += "\n" + texto_pdf
-                            os.unlink(temp_pdf_print(f"Monitor de e-mails iniciado! Checando a cada {INTERVALO_VERIFICACAO} segundos..."))
+                            os.unlink(temp_pdf_path)
             else:
                 charset = mensagem.get_content_charset() or "utf-8"
                 body = mensagem.get_payload(decode=True).decode(charset, errors="ignore")
