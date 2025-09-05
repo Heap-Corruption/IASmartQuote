@@ -4,6 +4,7 @@ import re
 import requests
 from datetime import datetime
 from dotenv import load_dotenv
+from SmartSearch import smart_search
 from find import scrape_products
 from sendMailer import sendEmail
 from alerts import alertAdmins, alertSupport
@@ -60,7 +61,7 @@ def make_quote(payload, client, sentFrom, askDate, subject, body):
                 bdProducts = bdProducts["products"]
                 for item in ia_response:
                     # Buscar produto no BD
-                    bdProduct = find_product(bdProducts, item["product"], "name")
+                    bdProduct = smart_search(item["product"], bdProducts)
                     if (bdProduct):
                         quoteItem = {"quoteId": quoteId, "productId": bdProduct["id"], "quantity": item["quantity"], "description": bdProduct["description"], \
                             "unitPrice": bdProduct["unitPrice"], "notes": "",\
@@ -106,8 +107,8 @@ def make_quote(payload, client, sentFrom, askDate, subject, body):
                                     }
                                     data = postTo(data, API_ROUTES["getTips"], header)
                                     print("✅ Tips created successfully")
-                                # print("✅✅✅✅ Don't forget to alertAdmins")
-                                alertAdmins(header, "SmartQuote: Sugestões de produtos não encontrados", os.getenv("MAILBODY"))
+                                print("✅✅✅✅ Don't forget to alertAdmins")
+                                # alertAdmins(header, "SmartQuote: Sugestões de produtos não encontrados", os.getenv("MAILBODY"))
             except Exception as e:
                 print("Internal API error: ", str(e))
                 alertSupport(f"SmartQuote: Erro na API Interna", f"Acesso à API interna falhou: <strong>{str(e)}</strong><br> Tips: Verifique a sua chave da API, as credenciais de login e se o serviço está ativo.")
