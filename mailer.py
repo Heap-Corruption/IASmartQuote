@@ -86,7 +86,8 @@ def emailProcessing():
                 "email": clientEmail,
                 "data_pedido": sentAt
             }
-            res = make_quote(payload, remetente, clientEmail, sentAt, subject_raw, body)
+            if ("cotação" in str(subject_raw).lower()) or ("orçamento" in str(subject_raw).lower()) or ("cotacao" in str(subject_raw).lower()) or ("orcamento" in str(subject_raw).lower()):
+                res = make_quote(payload, remetente, clientEmail, sentAt, subject_raw, body)
             if (res == 0):
                 mail.store(num, '+FLAGS', '\\Seen')
             else:

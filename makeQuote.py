@@ -90,7 +90,7 @@ def make_quote(payload, client, sentFrom, askDate, subject, body):
                                 print("✅ Empty tips created successfully")
                                 data = data["data"]
                                 notFoundItem = {"quoteId": quoteId, "notFoundId": data, "quantity": 0, "description": "None", \
-                                "unitPrice": 0.01,  "totalPrice": 0.01, "tax": 0}
+                                "unitPrice": 0,  "totalPrice": 0, "tax": 0}
                                 data = postTo(notFoundItem, API_ROUTES["getquoteItemsNotFound"], header)
                                 print("✅ Quote-item-not-found created successfully")
                             else:
@@ -106,6 +106,7 @@ def make_quote(payload, client, sentFrom, askDate, subject, body):
                                     }
                                     data = postTo(data, API_ROUTES["getTips"], header)
                                     print("✅ Tips created successfully")
+                                # print("✅✅✅✅ Don't forget to alertAdmins")
                                 alertAdmins(header, "SmartQuote: Sugestões de produtos não encontrados", os.getenv("MAILBODY"))
             except Exception as e:
                 print("Internal API error: ", str(e))

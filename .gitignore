@@ -4,3 +4,15 @@ Makefile
 __pycache__/
 virtual
 Result.json
+node_modules/
+*.log
+*.pyc
+.DS_Store
+.vscode/
+npm/
+.idea/
+dist/
+fatura.pdf
+package-lock.json
+package.json
+test*
