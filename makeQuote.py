@@ -64,9 +64,9 @@ def make_quote(payload, client, sentFrom, askDate, subject, body):
                     # Buscar produto no BD
                     bdProduct = smart_search(item, bdProducts)
                     if (bdProduct):
-                        quoteItem = {"quoteId": quoteId, "productId": bdProduct["id"], "quantity": item["quantity"], "description": bdProduct["description"], \
-                            "unitPrice": bdProduct["unitPrice"], "notes": "",\
-                            "totalPrice": (float)(bdProduct["unitPrice"]) * (float)(item["quantity"]) + float(bdProduct.get("tax", 0)), "tax": float(bdProduct.get("tax", 0))}
+                        quoteItem = {"quoteId": quoteId, "productId": bdProduct["id"], "quantity": int(item["quantity"]), "description": bdProduct["description"][:254], \
+                            "unitPrice": str(float(bdProduct["unitPrice"])), "notes": "",\
+                            "totalPrice": str((float)(bdProduct["unitPrice"]) * float(item["quantity"]) + float(bdProduct.get("tax", 0))), "tax": str(float(bdProduct.get("tax", 0)))}
                         quoteItem = postTo(quoteItem, API_ROUTES["getquoteItems"], header)
                         print("✅ Quote item for product created successfully")
                     else:
@@ -82,17 +82,16 @@ def make_quote(payload, client, sentFrom, askDate, subject, body):
                                 data = {
                                 "quoteId": quoteId,
                                 "product": item["product"],
-                                "price": 0,
+                                "price": '0',
                                 "imageUrl": "None",
                                 "description": "None",
                                 "site": getEnv("WEBSITE", "array")[0],
-                                "link": "None"
-                            }
+                                "link": "None"}
                                 data = postTo(data, API_ROUTES["getTips"], header)
                                 print("✅ Empty tips created successfully")
                                 data = data["data"]
                                 notFoundItem = {"quoteId": quoteId, "notFoundId": data, "quantity": 0, "description": "None", \
-                                "unitPrice": 0,  "totalPrice": 0, "tax": 0}
+                                "unitPrice": '0',  "totalPrice": '0', "tax": '0'}
                                 data = postTo(notFoundItem, API_ROUTES["getquoteItemsNotFound"], header)
                                 print("✅ Quote-item-not-found created successfully")
                             else:
@@ -110,6 +109,11 @@ def make_quote(payload, client, sentFrom, askDate, subject, body):
                                     print("✅ Tips created successfully")
                                 # print("✅✅✅✅ Don't forget to alertAdmins")
                                 alertAdmins(header, "SmartQuote: Sugestões de produtos não encontrados", NEWOPTIONSBODY)
+                        else:
+                            notFoundItem = {"quoteId": quoteId, "notFoundId": notItem["id"], "quantity": 0, "description": notItem["description"], \
+                            "unitPrice": notItem["price"],  "totalPrice": '0', "tax": '0'}
+                            data = postTo(notFoundItem, API_ROUTES["getquoteItemsNotFound"], header)
+                            print("✅ Quote-item-not-found created successfully")
             except Exception as e:
                 print("Internal API error: ", str(e))
                 alertSupport(f"SmartQuote: Erro na API Interna", f"Acesso à API interna falhou: <strong>{str(e)}</strong><br> Tips: Verifique a sua chave da API, as credenciais de login e se o serviço está ativo.")

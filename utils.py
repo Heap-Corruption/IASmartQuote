@@ -50,8 +50,6 @@ def parse_price(price_str: str) -> float:
 def find_product(products, name_to_check, field):
     for p in products:
         if p.get(field, "").lower() == name_to_check.lower():
-            if (p["tax"] == None):
-                p["tax"] = 0
             status = p.get("status", "unknown")
             if status == "unknown":
                 return p
