@@ -62,11 +62,11 @@ def make_quote(payload, client, sentFrom, askDate, subject, body):
                 bdProducts = bdProducts["products"]
                 for item in ia_response:
                     # Buscar produto no BD
-                    bdProduct = smart_search(item["product"], bdProducts)
+                    bdProduct = smart_search(item, bdProducts)
                     if (bdProduct):
                         quoteItem = {"quoteId": quoteId, "productId": bdProduct["id"], "quantity": item["quantity"], "description": bdProduct["description"], \
                             "unitPrice": bdProduct["unitPrice"], "notes": "",\
-                            "totalPrice": (float)(bdProduct["unitPrice"]) * (float)(item["quantity"]) + bdProduct.get("tax", 0), "tax": bdProduct.get("tax", 0)}
+                            "totalPrice": (float)(bdProduct["unitPrice"]) * (float)(item["quantity"]) + float(bdProduct.get("tax", 0)), "tax": float(bdProduct.get("tax", 0))}
                         quoteItem = postTo(quoteItem, API_ROUTES["getquoteItems"], header)
                         print("✅ Quote item for product created successfully")
                     else:
