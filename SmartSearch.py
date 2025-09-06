@@ -89,7 +89,7 @@ def askIA(product, products):
     else:
         raise Exception("Resposta inválida da IA ao detectar o produto.")
 
-def smart_search(product, products):
+def smart_search(product: dict, products: list[dict]):
     load_dotenv()
     resultado = None
     try:
