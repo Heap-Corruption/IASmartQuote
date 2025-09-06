@@ -6,9 +6,10 @@ from datetime import datetime
 from dotenv import load_dotenv
 from SmartSearch import smart_search
 from find import scrape_products
+from mailContent import NEWOPTIONSBODY
 from sendMailer import sendEmail
 from alerts import alertAdmins, alertSupport
-from utils import parse_price, getName, find_product
+from utils import getEnv, parse_price, getName, find_product
 from doRequests import postTo, getFrom
 from routes import API_ROUTES
 
@@ -18,7 +19,7 @@ from routes import API_ROUTES
 def make_quote(payload, client, sentFrom, askDate, subject, body):
     load_dotenv()
     try:
-        response = requests.post(os.getenv("API_FLASK"), json=payload)
+        response = requests.post(getEnv("API_FLASK", "string"), json=payload)
         if response.ok:
             ia_response = response.json()
             if isinstance(ia_response, list):
@@ -30,7 +31,7 @@ def make_quote(payload, client, sentFrom, askDate, subject, body):
 
             # Access Datas
             try:
-                token = requests.post(API_ROUTES["login"], json=json.loads(os.getenv("LOGIN")))
+                token = requests.post(API_ROUTES["login"], json=getEnv("LOGIN", "json"))
                 if (token.ok is False):
                     raise Exception(token)
                 token = token.json()
@@ -84,7 +85,7 @@ def make_quote(payload, client, sentFrom, askDate, subject, body):
                                 "price": 0,
                                 "imageUrl": "None",
                                 "description": "None",
-                                "site": (json.loads(os.getenv("WEBSITE", "[]")) or [""])[0],
+                                "site": getEnv("WEBSITE", "array")[0],
                                 "link": "None"
                             }
                                 data = postTo(data, API_ROUTES["getTips"], header)
@@ -102,13 +103,13 @@ def make_quote(payload, client, sentFrom, askDate, subject, body):
                                         "price": parse_price(iter.get("price", "0")),
                                         "imageUrl": iter.get("image_url", ""),
                                         "description": iter.get("description", ""),
-                                        "site": (json.loads(os.getenv("WEBSITE", "[]")) or [""])[0],
+                                        "site": (getEnv("WEBSITE", "array"))[0],
                                         "link": iter.get("product_url", "")
                                     }
                                     data = postTo(data, API_ROUTES["getTips"], header)
                                     print("✅ Tips created successfully")
-                                print("✅✅✅✅ Don't forget to alertAdmins")
-                                # alertAdmins(header, "SmartQuote: Sugestões de produtos não encontrados", os.getenv("MAILBODY"))
+                                # print("✅✅✅✅ Don't forget to alertAdmins")
+                                alertAdmins(header, "SmartQuote: Sugestões de produtos não encontrados", NEWOPTIONSBODY)
             except Exception as e:
                 print("Internal API error: ", str(e))
                 alertSupport(f"SmartQuote: Erro na API Interna", f"Acesso à API interna falhou: <strong>{str(e)}</strong><br> Tips: Verifique a sua chave da API, as credenciais de login e se o serviço está ativo.")

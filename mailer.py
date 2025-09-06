@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from email.header import decode_header
 from alerts import alertSupport
 from makeQuote import make_quote
+from utils import getEnv
 
 # Configurações de e-mail
 load_dotenv()
@@ -22,8 +23,8 @@ INTERVALO_VERIFICACAO = 1
 def emailProcessing():
     try:
         res = 0
-        mail = imaplib.IMAP4_SSL(os.getenv("SERVIDOR_IMAP"))
-        mail.login(os.getenv("MAILUSER"), os.getenv("MAILPASSWORD"))
+        mail = imaplib.IMAP4_SSL(getEnv("SERVIDOR_IMAP", "string"))
+        mail.login(getEnv("MAILUSER", "string"), getEnv("MAILPASSWORD", "string"))
         mail.select("inbox")
 
         status, mensagens = mail.search(None, 'UNSEEN')

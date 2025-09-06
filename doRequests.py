@@ -4,6 +4,7 @@ import os
 from dotenv import load_dotenv
 
 from routes import API_ROUTES
+from utils import getEnv
 
 def postTo(data, url, headers):
     response = requests.post(url, json=data, headers=headers)
@@ -27,7 +28,7 @@ def getFrom(url, headers):
     
 def login ():
     load_dotenv()
-    token = requests.post(API_ROUTES["login"], json=json.loads(os.getenv("LOGIN")))
+    token = requests.post(API_ROUTES["login"], json=getEnv("LOGIN", "json"))
     if (token.ok is False):
         raise Exception("Não foi possível autenticar na API.")
     if (token.json()["status"] != "success"):

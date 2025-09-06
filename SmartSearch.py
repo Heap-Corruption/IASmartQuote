@@ -4,6 +4,7 @@ import re
 import requests
 from dotenv import load_dotenv
 from routes import API_ROUTES
+from utils import getEnv
 
 
 # product = {'clientEmail': 'angeloquissanga55@gmail.com', 'clientName': '', \
@@ -76,7 +77,7 @@ def askIA(product, products):
             "pergunta": f"""Busque o produto {product} nesta lista de produtos {products} e retorne o produto se encontrado. Se nao encontrar, retorne o produto a ser procurado.""",
             "instrucao": INSTRUCTION
         }
-    response = requests.post(os.getenv("API_FLASK"), json=payload)
+    response = requests.post(getEnv("API_FLASK", "string"), json=payload)
     if response.ok:
         response = response.json()
     else:

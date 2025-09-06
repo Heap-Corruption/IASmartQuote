@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import requests
 
 from alerts import alertSupport
+from utils import getEnv
 
 INSTRUCAO_DE_SISTEMA = """Voce agora pode me ajudar a encontrar no maximo 4 opcoes de produtos tendo em conta o melhor custo beneficio entre uma lista de produtos.
 ## Regras:
@@ -80,10 +81,10 @@ def scrape_products(product_json: dict):
     Recebe um JSON com { "product": "...", "price": "..."(opcional), "description": "..."(opcional) }
     Faz scraping e retorna lista de produtos encontrados.
     """
-    app = FirecrawlApp(api_key=os.getenv("FIRECRAWL_API_KEY"))
+    app = FirecrawlApp(api_key=getEnv("FIRECRAWL_API_KEY", "string"))
 
     search_term = product_json.get("product", "")
-    website = (json.loads(os.getenv("WEBSITE", "[]")) or [None])[0]+"/*"
+    website = getEnv("WEBSITE", "array")[0]+"/*"
     product_limit = 20
 
     try:
@@ -100,7 +101,7 @@ def scrape_products(product_json: dict):
             "pergunta": BODY,
             "instruction": INSTRUCAO_DE_SISTEMA
         }
-        response = requests.post(os.getenv("API_FLASK"), json=payload)
+        response = requests.post(getEnv("API_FLASK", "string"), json=payload)
 
         # Salvar no arquivo
         with open("Result.json", "w", encoding="utf-8") as f:

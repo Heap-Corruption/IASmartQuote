@@ -1,3 +1,5 @@
+import json
+import os
 import re
 
 def getName(rem):
@@ -64,3 +66,20 @@ def getAdm(users):
         if user.get("role") == "admin":
             adms.append(user)
     return adms
+
+def getEnv(envName, typeEnv):
+    from dotenv import load_dotenv
+    load_dotenv()
+    if typeEnv == "array":
+        js = json.loads(os.getenv(envName, "[]")) or [""]
+        if not js or not isinstance(js, list):
+            raise Exception(f"Invalid environment variable {envName}. Expected a JSON array.")
+    if (typeEnv == "string"):
+        js = os.getenv(envName, "")
+        if not js:
+            raise Exception(f"Invalid environment variable {envName}. Expected a string.")
+    if (typeEnv == "json"):
+        js = json.loads(os.getenv(envName, "{}"))
+        if not js or not isinstance(js, dict):
+            raise Exception(f"Invalid environment variable {envName}. Expected a JSON object.")
+    return js
