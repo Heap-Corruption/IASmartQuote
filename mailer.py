@@ -10,7 +10,14 @@ from dotenv import load_dotenv
 from email.header import decode_header
 from alerts import alertSupport
 from makeQuote import make_quote
+from email.parser import BytesParser
+from email import policy
 from utils import getEnv
+from email.utils import parseaddr
+from resent import get_email, forward_email, get_from_email
+from sendMailer import sendEmail
+from mailContent import SYSTEMDOWNBODY
+
 
 # Configurações de e-mail
 load_dotenv()
@@ -19,18 +26,30 @@ load_dotenv()
 INTERVALO_VERIFICACAO = 1
 
 
+def get_from_email(raw_email: bytes) -> str:
+    # Faz o parse do raw email
+    msg = BytesParser(policy=policy.default).parsebytes(raw_email)
+    
+    # Extrai o campo From
+    name, addr = parseaddr(msg["From"])
+    return addr
+
 # Cota todos os produtos
 def emailProcessing():
     try:
         res = 0
         mail = imaplib.IMAP4_SSL(getEnv("SERVIDOR_IMAP", "string"))
-        mail.login(getEnv("MAILUSER", "string"), getEnv("MAILPASSWORD", "string"))
+        AUTHOMATIONBOX = getEnv("AUTHOMATIONBOX", "json")
+        mail.login(AUTHOMATIONBOX.get("email", ""), AUTHOMATIONBOX.get("password", ""))
         mail.select("inbox")
-
         status, mensagens = mail.search(None, 'UNSEEN')
+        if status != "OK" or not mensagens[0]:
+            mail.logout()
+            return 2  # Nenhum email não lido encontrado
         for num in mensagens[0].split():
             status, dados = mail.fetch(num, "(RFC822)")
             mensagem = email.message_from_bytes(dados[0][1])
+            # print(f"\n\n\n📧 New email from: {}")
 
             # Decodificar assunto
             subject_raw = mensagem["Subject"]
@@ -77,9 +96,8 @@ def emailProcessing():
                 sentAt = datetime.strptime(data_email, "%a, %d %b %Y %H:%M:%S %z").isoformat()
             except:
                 sentAt = datetime.utcnow().isoformat()
-
-            clientEmail = remetente.split("<")[-1].replace(">", "").strip()
-            clientName = remetente.split("<")[0].strip().replace('"', '')
+            clientEmail = get_from_email(dados[0][1])
+            clientName = mensagem.get("From")
 
             payload = {
                 "pergunta": body,
@@ -94,18 +112,39 @@ def emailProcessing():
             else:
                 mail.store(num, '-FLAGS', '\\Seen')
         mail.logout()
+        # print(f"\n\n\nEmail client: {get_from_email(mensagens)}\n\n")
         return res
     except Exception as e:
         print("\n🛑 Error processing emails:", str(e))
         alertSupport("SmartQuote: problemas técnicos", str(e))
+        return -1  # Indica erro grave
 
 def run_service():
+    state = "on"
     while True:
-        if (emailProcessing() != 0):
+        res = emailProcessing()
+        if (res == -1):
+            state = "off"
             break
-        time.sleep(INTERVALO_VERIFICACAO)
+        if (res != 0):
+            break
+    return state
 if __name__ == "__main__":
+    IMAP_SERVER = "imap.gmail.com"
+    SMTP_SERVER = "smtp.gmail.com"
+    load_dotenv()
     print(f"Main:Monitor de e-mails iniciado! Checando a cada {INTERVALO_VERIFICACAO} segundos...")
-    run_service()
-else:
-    print(f"Service:Monitor de e-mails iniciado! Checando a cada {INTERVALO_VERIFICACAO} segundos...")
+    quotebox = getEnv("QUOTEBOX", "json")
+    authomationbox = getEnv("AUTHOMATIONBOX", "json")
+    state = "on"
+    while True:
+        raw_email = get_email(IMAP_SERVER, quotebox.get("email"), quotebox.get("password"))
+        # print(get_from_email(raw_email))
+        if (raw_email):
+            forward_email(SMTP_SERVER, quotebox.get("email"), quotebox.get("password"), raw_email, authomationbox.get("email"))
+        if (state == "on"):
+            state = run_service()
+        if (state == "off" and raw_email):
+            sendEmail(get_from_email(raw_email), "SmartQuote offline", SYSTEMDOWNBODY, is_html=True)
+            print("✅ Client notification successful.")
+        time.sleep(INTERVALO_VERIFICACAO)

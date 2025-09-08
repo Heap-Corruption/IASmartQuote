@@ -41,8 +41,8 @@ def make_quote(payload, client, sentFrom, askDate, subject, body):
                 quote = {
                     "userId": token["data"]["id"],
                     "quoteNumber": "003",
-                    "clientName": ia_response[0].get("clientName", ""),
-                    "clientEmail": ia_response[0].get("clientEmail", ""),
+                    "clientName": payload.get("cliente", ""),
+                    "clientEmail": payload.get("email", ""),
                     "clientPhone": ia_response[0].get("clientPhone", ""),
                     "destination": ia_response[0].get("destination", ""),
                     "dueDate": ia_response[0].get("dueDate", ""),
@@ -66,9 +66,10 @@ def make_quote(payload, client, sentFrom, askDate, subject, body):
                         # print(f"\n\n🔍 Produto buscado: {item}\n\n BD: {bdProduct}\n\n")
                         if (bdProduct):
                             # print("\n\n Product found in database")
-                            quoteItem = {"quoteId": quoteId, "productId": bdProduct["id"], "quantity": int(item.get("quantity") or 0), "description": bdProduct["description"][:254], \
+                            quoteItem = {"quoteId": quoteId, "productId": bdProduct["id"], "quantity": int(item.get("quantity", 0)) or 0, "description": bdProduct["description"][:254], \
                                 "unitPrice": str(float(bdProduct["unitPrice"])), "notes": "",\
                                 "totalPrice": str((float)(bdProduct["unitPrice"]) * float(item.get("quantity", 0)) + float(bdProduct.get("tax", 0))), "tax": str(float(bdProduct.get("tax", 0)))}
+                            # print(f"\n\n✅ Quote item to be created: {quoteItem}\n\n")
                             quoteItem = postTo(quoteItem, API_ROUTES["getquoteItems"] + f"/{quoteId}/items", header)
                             print("✅ Quote item for product created successfully")
                         else:
@@ -125,6 +126,6 @@ def make_quote(payload, client, sentFrom, askDate, subject, body):
             raise Exception(response.text)
     except Exception as e:
         print("IA error: ", str(e))
-        alertSupport(f"SmartQuote: Erro na IA", f"Resposta inesperada da IA: <strong>{response.text}</strong><br> Tips: Verifique a sua chave da API Flask e se o serviço está ativo.")
+        alertSupport(f"SmartQuote: Erro na IA", f"Resposta inesperada da IA: <strong>{e}</strong><br> Tips: Verifique a sua chave da API Flask e se o serviço está ativo.")
         return -1
     return 0

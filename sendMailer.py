@@ -5,12 +5,15 @@ from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
 import os
 
+from utils import getEnv
+
 # ...existing code...
 
 def sendEmail(to_email, subject, message, is_html=False):
     load_dotenv()
-    from_email = os.getenv("MAILUSER")
-    password = os.getenv("MAILPASSWORD")
+    AUTHOMATIONBOX = getEnv("AUTHOMATIONBOX", "json")
+    from_email = AUTHOMATIONBOX.get("email", "")
+    password = AUTHOMATIONBOX.get("password", "")
 
     if not from_email or not password:
         raise ValueError("Credenciais de email não configuradas.")
