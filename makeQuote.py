@@ -57,63 +57,66 @@ def make_quote(payload, client, sentFrom, askDate, subject, body):
                 print("✅ Quote created successfully")
 
                 quoteId = quoteId["data"]
-                bdProducts = getFrom(API_ROUTES["getProducts"], header)
+                bdProducts = getFrom(API_ROUTES["getProducts"], header)["data"]
                 print("✅ Products fetched successfully")
-                bdProducts = bdProducts["products"]
                 for item in ia_response:
-                    # Buscar produto no BD
-                    bdProduct = smart_search(item, bdProducts)
-                    if (bdProduct):
-                        quoteItem = {"quoteId": quoteId, "productId": bdProduct["id"], "quantity": int(item["quantity"]), "description": bdProduct["description"][:254], \
-                            "unitPrice": str(float(bdProduct["unitPrice"])), "notes": "",\
-                            "totalPrice": str((float)(bdProduct["unitPrice"]) * float(item["quantity"]) + float(bdProduct.get("tax", 0))), "tax": str(float(bdProduct.get("tax", 0)))}
-                        quoteItem = postTo(quoteItem, API_ROUTES["getquoteItems"], header)
-                        print("✅ Quote item for product created successfully")
-                    else:
-                        notfoundList = getFrom(API_ROUTES["getTips"], header)
-                        print("✅ Tips fetched successfully")
-                        notfoundList = notfoundList["data"]
-                        notItem = find_product(notfoundList, item["product"], "product")
-                        if (notItem is None):
-                            # Fazer scraping do produto
-                            scrapResult = scrape_products(item)[:3]
-                            print("✅ Scraping completed successfully")
-                            if (len(scrapResult) == 0):
-                                data = {
-                                "quoteId": quoteId,
-                                "product": item["product"],
-                                "price": '0',
-                                "imageUrl": "None",
-                                "description": "None",
-                                "site": getEnv("WEBSITE", "array")[0],
-                                "link": "None"}
-                                data = postTo(data, API_ROUTES["getTips"], header)
-                                print("✅ Empty tips created successfully")
-                                data = data["data"]
-                                notFoundItem = {"quoteId": quoteId, "notFoundId": data, "quantity": 0, "description": "None", \
-                                "unitPrice": '0',  "totalPrice": '0', "tax": '0'}
-                                data = postTo(notFoundItem, API_ROUTES["getquoteItemsNotFound"], header)
-                                print("✅ Quote-item-not-found created successfully")
-                            else:
-                                for iter in scrapResult:
-                                    data = {
-                                        "quoteId": quoteId,
-                                        "product": iter.get("name", ""),
-                                        "price": parse_price(iter.get("price", "0")),
-                                        "imageUrl": iter.get("image_url", ""),
-                                        "description": iter.get("description", ""),
-                                        "site": (getEnv("WEBSITE", "array"))[0],
-                                        "link": iter.get("product_url", "")
-                                    }
-                                    data = postTo(data, API_ROUTES["getTips"], header)
-                                    print("✅ Tips created successfully")
-                                # print("✅✅✅✅ Don't forget to alertAdmins")
-                                alertAdmins(header, "SmartQuote: Sugestões de produtos não encontrados", NEWOPTIONSBODY)
+                    if (item.get("product")):
+                        # Buscar produto no BD
+                        bdProduct = smart_search(item, bdProducts)
+                        # print(f"\n\n🔍 Produto buscado: {item}\n\n BD: {bdProduct}\n\n")
+                        if (bdProduct):
+                            # print("\n\n Product found in database")
+                            quoteItem = {"quoteId": quoteId, "productId": bdProduct["id"], "quantity": int(item.get("quantity") or 0), "description": bdProduct["description"][:254], \
+                                "unitPrice": str(float(bdProduct["unitPrice"])), "notes": "",\
+                                "totalPrice": str((float)(bdProduct["unitPrice"]) * float(item.get("quantity", 0)) + float(bdProduct.get("tax", 0))), "tax": str(float(bdProduct.get("tax", 0)))}
+                            quoteItem = postTo(quoteItem, API_ROUTES["getquoteItems"] + f"/{quoteId}/items", header)
+                            print("✅ Quote item for product created successfully")
                         else:
-                            notFoundItem = {"quoteId": quoteId, "notFoundId": notItem["id"], "quantity": 0, "description": notItem["description"], \
-                            "unitPrice": notItem["price"],  "totalPrice": '0', "tax": '0'}
-                            data = postTo(notFoundItem, API_ROUTES["getquoteItemsNotFound"], header)
-                            print("✅ Quote-item-not-found created successfully")
+                            notfoundList = getFrom(API_ROUTES["getTips"], header)
+                            print("✅ Tips fetched successfully")
+                            notfoundList = notfoundList["data"]
+                            notItem = find_product(notfoundList, item["product"], "product")
+                            if (notItem is None):
+                                # Fazer scraping do produto
+                                scrapResult = scrape_products(item)[:3]
+                                print("✅ Scraping completed successfully")
+                                if (len(scrapResult) == 0):
+                                    data = {
+                                    "quoteId": quoteId,
+                                    "product": item["product"],
+                                    "price": '0',
+                                    "imageUrl": "None",
+                                    "description": "None",
+                                    "site": getEnv("WEBSITE", "array")[0],
+                                    "link": "None"}
+                                    print(f"Scraping result is empty for product: {data}")
+                                    data = postTo(data, API_ROUTES["getTips"], header)
+                                    print("✅ Empty tips created successfully")
+                                    data = data["data"]
+                                    notFoundItem = {"quoteId": quoteId, "notFoundId": data, "quantity": 0, "description": "None", \
+                                    "unitPrice": '0',  "totalPrice": '0', "tax": '0'}
+                                    data = postTo(notFoundItem, API_ROUTES["getquoteItems"] + f"/{quoteId}/not-found", header)
+                                    print("✅ Quote-item-not-found created successfully")
+                                else:
+                                    for iter in scrapResult:
+                                        data = {
+                                            "quoteId": quoteId,
+                                            "product": iter.get("name", ""),
+                                            "price": parse_price(iter.get("price", "0")),
+                                            "imageUrl": iter.get("image_url", ""),
+                                            "description": iter.get("description", ""),
+                                            "site": (getEnv("WEBSITE", "array"))[0],
+                                            "link": iter.get("product_url", "")
+                                        }
+                                        data = postTo(data, API_ROUTES["getTips"], header)
+                                        print("✅ Tips created successfully")
+                                    # print("✅✅✅✅ Don't forget to alertAdmins")
+                                    alertAdmins(header, "SmartQuote: Sugestões de produtos não encontrados", NEWOPTIONSBODY)
+                            else:
+                                notFoundItem = {"quoteId": quoteId, "notFoundId": notItem["id"], "quantity": 0, "description": notItem["description"], \
+                                "unitPrice": notItem["price"],  "totalPrice": '0', "tax": '0'}
+                                data = postTo(notFoundItem, API_ROUTES["getquoteItems"] + f"/{quoteId}/not-found", header)
+                                print("✅ Quote-item-not-found created successfully")
             except Exception as e:
                 print("Internal API error: ", str(e))
                 alertSupport(f"SmartQuote: Erro na API Interna", f"Acesso à API interna falhou: <strong>{str(e)}</strong><br> Tips: Verifique a sua chave da API, as credenciais de login e se o serviço está ativo.")

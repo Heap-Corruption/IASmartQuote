@@ -6,8 +6,8 @@ API_ROUTES = {
     "getQuote": "https://smart-quote-back.onrender.com/v1/api/quotes",
     "getTips": "https://smart-quote-back.onrender.com/v1/api/tips",
     "getUsers": "https://smart-quote-back.onrender.com/v1/api/users",
-    "getquoteItems": "https://smart-quote-back.onrender.com/v1/api/quote-items",
-    "getquoteItemsNotFound": "https://smart-quote-back.onrender.com/v1/api/quote-items-not-found"
+    "getquoteItems": "https://smart-quote-back.onrender.com/v1/api/quotes",
+    # "getquoteItemsNotFound": "https://smart-quote-back.onrender.com/v1/api/quotes"
 }
 
 # API_ROUTES = {
